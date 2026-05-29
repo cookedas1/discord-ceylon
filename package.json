@@ -1,0 +1,26 @@
+{
+  "name": "ceylon-bot",
+  "version": "1.0.0",
+  "description": "디스코드 퍼블릭 모의주식 봇 - 실론(Ceylon)",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon main.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "stock",
+    "simulation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
