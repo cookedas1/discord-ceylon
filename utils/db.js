@@ -33,7 +33,21 @@ setInterval(updateStockPrices, TICK_INTERVAL);
 console.log('✅ Supabase PostgreSQL 데이터베이스 연결 및 주가 변동 타이머(30초) 가동 완료!');
 
 module.exports = {
-// db.js의 module.exports = { ... } 내부에 아래 함수들을 추가하세요.
+
+    // 💡 랭킹 조회를 위해 모든 유저의 자산 및 주식 데이터 가져오기
+    getLeaderboardData: async (guildId) => {
+        try {
+            // 해당 서버(guild)의 모든 유저 정보
+            const users = await pool.query('SELECT user_id, cash FROM users WHERE guild_id = $1', [guildId]);
+            // 해당 서버의 모든 주식 보유 정보
+            const holdings = await pool.query('SELECT user_id, stock_name, quantity FROM holdings WHERE guild_id = $1', [guildId]);
+            
+            return { users: users.rows, holdings: holdings.rows };
+        } catch (error) {
+            handleError(error, 'getLeaderboardData 쿼리 중 오류');
+            return null;
+        }
+    },
 
     // 💡 유저 탈퇴 처리 (보유 주식 삭제 -> 유저 정보 삭제 -> 탈퇴 기록 추가)
     withdrawUser: async (userId, guildId) => {
