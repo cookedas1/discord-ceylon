@@ -2,10 +2,13 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
+const http = require('http');
 const { handleError } = require('./utils/errorHandler');
 const db = require('./utils/db'); // DB 모듈 불러오기
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+const PORT = process.env.PORT || 3000;
 
 client.commands = new Collection();
 const commandsJson = [];
@@ -68,3 +71,9 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Ceylon Bot is Online!');
+}).listen(PORT, () => {
+    console.log(`[시스템] 서버 유지를 위한 웹서버가 ${PORT} 포트에서 돌아가는 중입니다.`);
+});
