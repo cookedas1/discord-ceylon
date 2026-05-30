@@ -1,27 +1,52 @@
 const { EmbedBuilder } = require('discord.js');
 
-function handleError(error, context = '알 수 없는 오류', interaction = null) {
-    const timestamp = new Date().toISOString();
-    
-    // 1. 개발자 보라고 터미널에 에러 로그 출력
-    console.error(`[${timestamp}] ❌ 에러 발생 [위치/콘텍스트: ${context}]`);
-    console.error(error);
+/**
+ * 전역 에러 핸들러 모듈
+ * @param {Error} error 발생한 에러 객체
+ * @param {string} context 에러가 발생한 상황 설명
+ * @param {import('discord.js').Interaction} interaction 디스코드 인터랙션 객체
+ */
+function handleError(error, context, interaction) {
+    // 1. 🚨 터미널 및 Render 로그에 무조건 에러 강제 출력! (로그 안 뜨던 문제 해결)
+    console.error(`\n[🚨 SYSTEM ERROR] --------------------------------0`);
+    console.error(`📅 발생 시간: ${new Date().toISOString()}`);
+    console.error(`📂 발생 위치: ${context}`);
+    console.error(`💬 에러 내용:`, error);
+    console.error(`--------------------------------------------------\n`);
 
-    // 2. interaction 객체가 함께 넘어왔다면 유저에게 임베드 전송
+    // 디스코드 글자 수 제한(1024자)을 넘지 않도록 안전하게 자르기
+    const errorMessage = error.message || String(error);
+    const errorStack = error.stack ? error.stack.slice(0, 800) : '스택 정보 없음';
+
+    // 2. 💻 개발자용 디버깅 정보가 포함된 화려한 오류 임베드 생성
+    const errorEmbed = new EmbedBuilder()
+        .setTitle('❌ 시스템 작동 중 오류가 발생했습니다')
+        .setDescription(`**상황:** \`${context}\`\n소스 코드 내부에서 문제가 발생하여 명령어를 완료하지 못했습니다.`)
+        .setColor('#FF3333')
+        .addFields(
+            { 
+                name: '💬 에러 메시지 (Error Message)', 
+                value: `\`\`\`text\n${errorMessage}\n\`\`\`` 
+            },
+            { 
+                name: '💻 에러 스택 코드 (Stack Trace 일부)', 
+                value: `\`\`\`js\n${errorStack}\n\`\`\`` 
+            }
+        )
+        .setFooter({ text: '실론 개발실 • 실시간 디버깅 모드 가동 중' })
+        .setTimestamp();
+
+    // 3. 🛡️ 인터랙션 상태(이미 응답했는지 등)를 체크하여 안전하게 답변 전송
     if (interaction) {
-        const errorEmbed = new EmbedBuilder()
-            .setTitle('⚠️ 오류가 발생했습니다')
-            .setDescription('오류가 발생했어요. 해당 오류가 지속된다면 **한입 스튜디오**에 문의해주세요.')
-            .setColor(0xFF0000)
-            .setTimestamp();
-
-        const errorPayload = { embeds: [errorEmbed], ephemeral: true };
-
-        // 봇이 이미 명령어에 응답(reply)했거나 대기(defer) 중인지 체크하여 전송
+        // 비밀 메시지(ephemeral)로 보내서 일반 유저들에게는 안 보이고 명령어 친 사람(테스트 중인 유저님) 눈에만 보이게 합니다.
         if (interaction.replied || interaction.deferred) {
-            interaction.followUp(errorPayload).catch(err => console.error('❌ 에러 임베드 전송 실패 (followUp):', err));
+            interaction.followUp({ embeds: [errorEmbed], ephemeral: true }).catch((err) => {
+                console.error('오류 임베드 followUp 전송 실패:', err);
+            });
         } else {
-            interaction.reply(errorPayload).catch(err => console.error('❌ 에러 임베드 전송 실패 (reply):', err));
+            interaction.reply({ embeds: [errorEmbed], ephemeral: true }).catch((err) => {
+                console.error('오류 임베드 reply 전송 실패:', err);
+            });
         }
     }
 }
