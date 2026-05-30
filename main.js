@@ -4,7 +4,11 @@ const path = require('path');
 const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
 const http = require('http');
 const { handleError } = require('./utils/errorHandler');
-const db = require('./utils/db'); // DB 모듈 불러오기
+const db = require('./utils/db'); 
+
+// 💡 추가됨: 작성해주신 interactionCreate.js 파일을 불러옵니다.
+// (주의: 파일이 있는 실제 경로에 맞게 './utils/interactionCreate' 등 경로를 수정해 주세요!)
+const interactionHandler = require('./events/interactionCreate'); 
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
@@ -41,13 +45,13 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
+    
+    // 💡 [수정됨] 범인이었던 무조건 return 하는 코드를 지우고, 가입 검증을 맨 위로 올렸습니다.
+    // 버튼이나 드롭다운은 commandName이 없으므로, undefined 처리하여 안전하게 검증합니다.
+    const commandName = interaction.commandName || ''; 
 
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
-
-    // 💡 [가입 제한 시스템] 가입 및 핑 명령어가 아니면 DB 등록 여부 검사
-    if (interaction.commandName !== '가입' && interaction.commandName !== '핑') {
+    // 💡 [가입 제한 시스템] 가입 및 핑 명령어가 아니면 DB 등록 여부 무조건 검사 (버튼, 미니게임 포함)
+    if (commandName !== '가입' && commandName !== '핑') {
         try {
             const isUser = await db.checkUser(interaction.user.id, interaction.guildId);
             
@@ -59,14 +63,28 @@ client.on('interactionCreate', async interaction => {
                 });
             }
         } catch (error) {
-            return handleError(error, '명령어 실행 전 가입 여부 검증 중 오류 발생', interaction);
+            return handleError(error, '상호작용 전 가입 여부 검증 중 오류 발생', interaction);
         }
     }
 
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        handleError(error, `명령어 실행 중 오류 발생 (/${interaction.commandName})`, interaction);
+    // 1️⃣ 슬래시 명령어일 때의 처리
+    if (interaction.isChatInputCommand()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
+
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            handleError(error, `명령어 실행 중 오류 발생 (/${interaction.commandName})`, interaction);
+        }
+    }
+    // 2️⃣ 드롭다운, 버튼, 모달창일 때의 처리 (interactionCreate.js로 전달)
+    else if (interaction.isStringSelectMenu() || interaction.isButton() || interaction.isModalSubmit()) {
+        try {
+            await interactionHandler.handleInteraction(interaction);
+        } catch (error) {
+            handleError(error, '미니게임 상호작용 처리 중 오류 발생', interaction);
+        }
     }
 });
 
