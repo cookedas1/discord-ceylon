@@ -1,8 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const db = require('../utils/db');
+const db = require('../utils/db'); // 💡 보내주신 db.js 모듈 로드
 const path = require('path');
 const fs = require('fs');
-// 💡 개발자님의 에러 핸들러 모듈을 명확히 불러옵니다!
 const { handleError } = require('../utils/errorHandler'); 
 
 module.exports = {
@@ -11,12 +10,13 @@ module.exports = {
         .setDescription('📢 [전 서버 공통] 하루에 단 한 번, 주식 시장에 대격변을 일으키는 뉴스를 발표합니다!'),
 
     async execute(interaction) {
+        // 1. ⏰ 한국 시간(KST) 기준 오늘 날짜 구하기
         const now = new Date();
         const krTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
         const todayStr = krTime.toISOString().split('T')[0];
 
         try {
-            // 1. 🔒 DB에서 마지막 뉴스 발행일 조회
+            // 2. 🔒 DB에서 마지막 뉴스 발행일 조회 및 하루 제한 체크
             const settingRes = await db.query("SELECT value FROM global_settings WHERE key = 'last_news_date'");
             const lastNewsDate = settingRes.rows[0]?.value;
 
@@ -27,7 +27,7 @@ module.exports = {
                 });
             }
 
-            // 2. 📂 utils/news.json 파일 실시간으로 읽어오기
+            // 3. 📂 utils/news.json 파일 실시간 읽기
             const jsonPath = path.join(__dirname, '../utils/news.json');
             if (!fs.existsSync(jsonPath)) {
                 return await interaction.reply({ content: '❌ `utils/news.json` 파일을 찾을 수 없습니다.', ephemeral: true });
@@ -35,16 +35,17 @@ module.exports = {
             
             const newsData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
-            // 3. 🏢 상장된 주식 종목 가져오기
-            const stockListRes = await db.query('SELECT company_name, price FROM stocks');
+            // 4. 🏢 상장된 주식 종목 가져오기 (db.js 스펙에 맞춰 ticker, name, price 조회)
+            const stockListRes = await db.query('SELECT ticker, name, price FROM stocks');
             if (stockListRes.rows.length === 0) {
                 return await interaction.reply({ content: '❌ 현재 상장된 주식 종목이 없습니다.', ephemeral: true });
             }
 
-            // 4. 랜덤 종목 및 호재/악재 결정
+            // 5. 랜덤 종목 선택 및 호재/악재 결정
             const targetStock = stockListRes.rows[Math.floor(Math.random() * stockListRes.rows.length)];
-            const companyName = targetStock.company_name;
+            const companyName = targetStock.name;
             const currentPrice = targetStock.price;
+            const stockTicker = targetStock.ticker; // 💡 고유 키인 ticker 확보
 
             const isUp = Math.random() > 0.5;
             const templates = isUp ? newsData.up : newsData.down;
@@ -60,16 +61,18 @@ module.exports = {
                 ? parseFloat((1.3 + Math.random() * 0.2).toFixed(2)) 
                 : parseFloat((0.5 + Math.random() * 0.2).toFixed(2));
 
-            const newPrice = Math.floor(currentPrice * impactMultiplier);
+            let newPrice = Math.floor(currentPrice * impactMultiplier);
+            if (newPrice < 100) newPrice = 100; // 💡 db.js의 '동전주 방지' 로직과 동일하게 맞춤 설정
+
             const changeRate = Math.round((impactMultiplier - 1) * 100);
             const rateString = isUp ? `▲ +${changeRate}%` : `▼ ${changeRate}%`;
             const embedColor = isUp ? '#FF0000' : '#0000FF';
 
-            // 5. 📝 DB 업데이트
-            await db.query('UPDATE stocks SET price = $1 WHERE company_name = $2', [newPrice, companyName]);
+            // 6. 📝 DB 업데이트 (db.js 규칙에 따라 WHERE ticker = $2 로 안전하게 매칭)
+            await db.query('UPDATE stocks SET price = $1 WHERE ticker = $2', [newPrice, stockTicker]);
             await db.query("UPDATE global_settings SET value = $1 WHERE key = 'last_news_date'", [todayStr]);
 
-            // 6. 📢 전 서버 공통 찌라시 임베드 출력
+            // 7. 📢 전 서버 공통 찌라시 임베드 출력
             const finalTitle = selectedNews.title.replace(/{company}/g, companyName);
             const finalDesc = selectedNews.desc.replace(/{company}/g, companyName);
 
@@ -78,7 +81,7 @@ module.exports = {
                 .setDescription(`### ${finalTitle}\n\n${finalDesc}`)
                 .setColor(embedColor)
                 .addFields(
-                    { name: '🏢 대상 종목', value: `**${companyName}**`, inline: true },
+                    { name: '🏢 대상 종목', value: `**${companyName} (${stockTicker})**`, inline: true },
                     { name: '📊 오늘의 변동률', value: `**${rateString}**`, inline: true },
                     { name: '💰 변동된 주가', value: `~~${currentPrice.toLocaleString()}~~ 원 ➡️ **${newPrice.toLocaleString()} 원**`, inline: false }
                 )
@@ -88,7 +91,6 @@ module.exports = {
             await interaction.reply({ embeds: [embed] });
 
         } catch (error) {
-            // 💡 [수정] 개발자님의 커스텀 에러 핸들러로 에러를 안전하게 토스합니다!
             return handleError(error, '뉴스 시스템 실행 중 오류 발생', interaction);
         }
     }
