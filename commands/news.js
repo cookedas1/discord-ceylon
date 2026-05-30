@@ -2,6 +2,8 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../utils/db');
 const path = require('path');
 const fs = require('fs');
+// 💡 개발자님의 에러 핸들러 모듈을 명확히 불러옵니다!
+const { handleError } = require('../utils/errorHandler'); 
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -9,13 +11,12 @@ module.exports = {
         .setDescription('📢 [전 서버 공통] 하루에 단 한 번, 주식 시장에 대격변을 일으키는 뉴스를 발표합니다!'),
 
     async execute(interaction) {
-        // 1. ⏰ 한국 시간(KST) 기준 오늘 날짜 구하기
         const now = new Date();
         const krTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
         const todayStr = krTime.toISOString().split('T')[0];
 
         try {
-            // 2. 🔒 DB에서 마지막 뉴스 발행일 조회 및 하루 제한 체크
+            // 1. 🔒 DB에서 마지막 뉴스 발행일 조회
             const settingRes = await db.query("SELECT value FROM global_settings WHERE key = 'last_news_date'");
             const lastNewsDate = settingRes.rows[0]?.value;
 
@@ -26,22 +27,21 @@ module.exports = {
                 });
             }
 
-            // 3. 📂 utils/news.json 파일 실시간으로 읽어오기
+            // 2. 📂 utils/news.json 파일 실시간으로 읽어오기
             const jsonPath = path.join(__dirname, '../utils/news.json');
             if (!fs.existsSync(jsonPath)) {
                 return await interaction.reply({ content: '❌ `utils/news.json` 파일을 찾을 수 없습니다.', ephemeral: true });
             }
             
-            // require 대신 fs를 사용해 읽어야 봇을 재시작하지 않고 JSON을 고쳐도 실시간 반영됩니다!
             const newsData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
-            // 4. 🏢 상장된 주식 종목 가져오기
+            // 3. 🏢 상장된 주식 종목 가져오기
             const stockListRes = await db.query('SELECT company_name, price FROM stocks');
             if (stockListRes.rows.length === 0) {
                 return await interaction.reply({ content: '❌ 현재 상장된 주식 종목이 없습니다.', ephemeral: true });
             }
 
-            // 5. 랜덤 종목 및 호재/악재 결정
+            // 4. 랜덤 종목 및 호재/악재 결정
             const targetStock = stockListRes.rows[Math.floor(Math.random() * stockListRes.rows.length)];
             const companyName = targetStock.company_name;
             const currentPrice = targetStock.price;
@@ -65,11 +65,11 @@ module.exports = {
             const rateString = isUp ? `▲ +${changeRate}%` : `▼ ${changeRate}%`;
             const embedColor = isUp ? '#FF0000' : '#0000FF';
 
-            // 6. 📝 DB의 stocks 테이블에 변동된 주가 및 날짜 락 반영
+            // 5. 📝 DB 업데이트
             await db.query('UPDATE stocks SET price = $1 WHERE company_name = $2', [newPrice, companyName]);
             await db.query("UPDATE global_settings SET value = $1 WHERE key = 'last_news_date'", [todayStr]);
 
-            // 7. 📢 전 서버 공통 찌라시 임베드 출력
+            // 6. 📢 전 서버 공통 찌라시 임베드 출력
             const finalTitle = selectedNews.title.replace(/{company}/g, companyName);
             const finalDesc = selectedNews.desc.replace(/{company}/g, companyName);
 
@@ -88,8 +88,8 @@ module.exports = {
             await interaction.reply({ embeds: [embed] });
 
         } catch (error) {
-            console.error('뉴스 생성 중 치명적 오류:', error);
-            await interaction.reply({ content: '❌ 뉴스 시스템 작동 중 오류가 발생했습니다.', ephemeral: true });
+            // 💡 [수정] 개발자님의 커스텀 에러 핸들러로 에러를 안전하게 토스합니다!
+            return handleError(error, '뉴스 시스템 실행 중 오류 발생', interaction);
         }
     }
 };
