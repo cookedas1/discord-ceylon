@@ -40,7 +40,7 @@ module.exports = {
             // 해당 서버(guild)의 모든 유저 정보
             const users = await pool.query('SELECT user_id, cash FROM users WHERE guild_id = $1', [guildId]);
             // 해당 서버의 모든 주식 보유 정보
-            const holdings = await pool.query('SELECT user_id, stock_name, quantity FROM holdings WHERE guild_id = $1', [guildId]);
+            const holdings = await pool.query('SELECT user_id, ticker, quantity FROM holdings WHERE guild_id = $1', [guildId]);
             
             return { users: users.rows, holdings: holdings.rows };
         } catch (error) {
