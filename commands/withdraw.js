@@ -4,7 +4,7 @@ const db = require('../utils/db');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('탈퇴')
-        .setDescription('실론 모의주식 서비스에서 탈퇴합니다. (2일간 재가입 불가)'),
+        .setDescription('실론에서 탈퇴합니다.'),
     async execute(interaction) {
         const userId = interaction.user.id;
         const guildId = interaction.guild.id;
@@ -13,7 +13,7 @@ module.exports = {
         const user = await db.checkUser(userId, guildId);
         if (!user) {
             return await interaction.reply({
-                content: '❌ 가입되어 있지 정황이 확인되지 않습니다. 먼저 `/가입`을 진행해 주세요.',
+                content: '❌ 가입되어 있지 않습니다. 먼저 `/가입`을 진행해 주세요.',
                 flags: [MessageFlags.Ephemeral]
             });
         }

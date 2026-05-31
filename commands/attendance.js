@@ -60,7 +60,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('✅ 출석 체크 완료!')
             .setColor('#00FF00')
-            .setDescription(`<@${userId}>님, 출석을 환영합니다!`)
+            .setDescription(`<@${userId}>님, 환영합니다!`)
             .addFields(
                 { name: '🔥 연속 출석', value: `**${combo}일** 연속!`, inline: true },
                 { name: '💰 획득 캐시', value: `**${totalReward.toLocaleString()} 캐시**`, inline: true },

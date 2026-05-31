@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../utils/db');
 const path = require('path');
 const fs = require('fs');
-const { handleError } = require('../utils/errorHandler'); 
+const { handleError } = require('../utils/errorHandler'); // 💡 우리의 만능 에러 핸들러
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,13 +10,12 @@ module.exports = {
         .setDescription('📢 [전 서버 공통] 오늘의 주식 시장 대격변 뉴스를 확인하거나 새로 발행합니다!'),
 
     async execute(interaction) {
-        // 1. ⏰ 한국 시간(KST) 기준 오늘 날짜 구하기
         const now = new Date();
         const krTime = new Date(now.getTime() + (9 * 60 * 60 * 1000));
         const todayStr = krTime.toISOString().split('T')[0];
 
         try {
-            // 2. 🔒 DB에서 '마지막 뉴스 날짜'와 '저장된 뉴스 내용'을 한 번에 가져오기
+            // 1. 🔒 DB에서 '마지막 뉴스 날짜'와 '저장된 뉴스 내용' 가져오기
             const settingsRes = await db.query(
                 "SELECT key, value FROM global_settings WHERE key IN ('last_news_date', 'current_news_json')"
             );
@@ -29,7 +28,7 @@ module.exports = {
             const lastNewsDate = settings['last_news_date'];
             const currentNewsJson = settings['current_news_json'];
 
-            // 3. 🔄 [오늘 이미 뉴스가 발행된 경우] -> 저장된 뉴스 리플레이!
+            // 2. 🔄 [오늘 이미 뉴스가 발행된 경우] -> 저장된 뉴스 리플레이
             if (lastNewsDate === todayStr && currentNewsJson && currentNewsJson !== '{}') {
                 const savedNews = JSON.parse(currentNewsJson);
 
@@ -48,18 +47,26 @@ module.exports = {
                 return await interaction.reply({ embeds: [embed] });
             }
 
-            // 4. 🆕 [오늘 첫 실행인 경우] -> 새로운 뉴스를 생성하고 주가에 반영!
+            // 3. 📂 [예외 체크 1] utils/news.json 파일이 없을 때 -> errorHandler 틀 적용!
             const jsonPath = path.join(__dirname, '../utils/news.json');
             if (!fs.existsSync(jsonPath)) {
-                return await interaction.reply({ content: '❌ `utils/news.json` 파일을 찾을 수 없습니다.', ephemeral: true });
+                return handleError(
+                    new Error('utils/news.json 파일을 찾을 수 없습니다.'), 
+                    '뉴스 설정 파일 로드 실패', 
+                    interaction
+                );
             }
             
             const newsData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
-            // 상장된 주식 종목 가져오기
+            // 4. 🏢 [예외 체크 2] 상장된 주식 종목이 없을 때 -> errorHandler 틀 적용!
             const stockListRes = await db.query('SELECT ticker, name, price FROM stocks');
             if (stockListRes.rows.length === 0) {
-                return await interaction.reply({ content: '❌ 현재 상장된 주식 종목이 없습니다.', ephemeral: true });
+                return handleError(
+                    new Error('현재 상장된 주식 종목이 없습니다.'), 
+                    'DB 상장 종목 조회 실패', 
+                    interaction
+                );
             }
 
             // 랜덤 종목 및 호재/악재 결정
@@ -71,8 +78,13 @@ module.exports = {
             const isUp = Math.random() > 0.5;
             const templates = isUp ? newsData.up : newsData.down;
             
+            // 5. 📑 [예외 체크 3] JSON 내부에 템플릿 배열이 비어있을 때 -> errorHandler 틀 적용!
             if (!templates || templates.length === 0) {
-                return await interaction.reply({ content: '❌ JSON 파일에 뉴스 템플릿이 정의되어 있지 않습니다.', ephemeral: true });
+                return handleError(
+                    new Error('json 파일에 뉴스 템플릿이 정의되어 있지 않습니다.'), 
+                    '뉴스 템플릿 매칭 실패', 
+                    interaction
+                );
             }
             
             const selectedNews = templates[Math.floor(Math.random() * templates.length)];
@@ -92,7 +104,6 @@ module.exports = {
             const finalTitle = selectedNews.title.replace(/{company}/g, companyName);
             const finalDesc = selectedNews.desc.replace(/{company}/g, companyName);
 
-            // 5. 📦 나중에 치는 유저들을 위해 오늘의 뉴스 데이터를 오브젝트로 포장
             const newsObj = {
                 title: finalTitle,
                 desc: finalDesc,
@@ -104,7 +115,7 @@ module.exports = {
                 embedColor: embedColor
             };
 
-            // 6. 📝 DB 대형 업데이트 (주가 변경 + 날짜 잠금 + 뉴스 데이터 저장)
+            // 6. 📝 DB 대형 업데이트
             await db.query('UPDATE stocks SET price = $1 WHERE ticker = $2', [newPrice, stockTicker]);
             await db.query("UPDATE global_settings SET value = $1 WHERE key = 'last_news_date'", [todayStr]);
             await db.query("UPDATE global_settings SET value = $1 WHERE key = 'current_news_json'", [JSON.stringify(newsObj)]);
@@ -125,7 +136,8 @@ module.exports = {
             await interaction.reply({ embeds: [embed] });
 
         } catch (error) {
-            return handleError(error, '뉴스 시스템 실행 중 오류 발생', interaction);
+            // 시스템 런타임 에러 처리
+            return handleError(error, '뉴스 시스템 실행 중 치명적 오류 발생', interaction);
         }
     }
 };

@@ -5,7 +5,7 @@ const { handleError } = require('../utils/errorHandler');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('가입')
-        .setDescription('실론 모의주식 시스템에 가입합니다.'),
+        .setDescription('실론에 가입합니다.'),
     async execute(interaction) {
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
@@ -34,7 +34,7 @@ module.exports = {
                 .setTitle('📜 실론 가입 안내')
                 .setDescription(
                     `**[약관 안내]**\n` +
-                    `실론 이용에 대한 가입을 하게 된다면 **운영 정책 및 개인정보처리방침**에 동의하는 것으로 간주합니다.`
+                    `실론 이용에 대한 가입을 하게 된다면 **운영 정책 및 개인정보처리방침(현재 OBT중으로 약관 없음)**에 동의하는 것으로 간주합니다.`
                 )
                 .setColor(0x0099FF)
                 .setTimestamp();

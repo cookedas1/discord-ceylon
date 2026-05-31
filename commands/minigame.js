@@ -3,11 +3,11 @@ const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, EmbedBui
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('미니게임')
-        .setDescription('실론의 화끈한 미니게임 목록을 확인합니다.'),
+        .setDescription('미니게임 목록을 확인합니다.'),
     
     async execute(interaction) {
         const embed = new EmbedBuilder()
-            .setTitle('🎮 실론 미니게임 센터')
+            .setTitle('🎮 실론 미니게임')
             .setDescription('아래 드롭다운 메뉴에서 즐길 미니게임을 골라보세요!\n과도한 도박은 자산 탕진의 지름길입니다. 📉')
             .setColor('#FFA500')
             .setTimestamp();

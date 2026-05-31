@@ -14,7 +14,7 @@ module.exports = {
     // 💡 입력 옵션 없이 깔끔하게 명령어만 남겨 편리하게 호출합니다.
     data: new SlashCommandBuilder()
         .setName('주식매도')
-        .setDescription('보유 중인 주식을 시장에 되팔아 현금화합니다.'),
+        .setDescription('보유 중인 주식을 시장에 되팔아 캐시화합니다.'),
 
     async execute(interaction) {
         const userId = interaction.user.id;
@@ -41,7 +41,7 @@ module.exports = {
             // 2. 보유 중인 주식들로만 드롭다운(Select Menu) 생성
             const selectMenu = new StringSelectMenuBuilder()
                 .setCustomId('sell_stock_select')
-                .setPlaceholder('📉 되팔아 현금화할 주식을 선택해 주세요')
+                .setPlaceholder('📉 되팔아 캐시화할 주식을 선택해 주세요')
                 .addOptions(
                     holdingsRes.rows.map(row => ({
                         label: `${row.name} (${row.ticker})`,

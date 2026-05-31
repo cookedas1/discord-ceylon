@@ -16,7 +16,7 @@ module.exports = {
             // 2. DB에서 서버 유저 데이터 및 주식 보유 데이터 가져오기
             const data = await db.getLeaderboardData(guildId);
             if (!data || data.users.length === 0) {
-                return await interaction.reply({ content: '📊 아직 가입한 유저가 없거나 데이터를 불러올 수 없습니다.', ephemeral: true });
+                return await interaction.reply({ content: '📊 아직 가입한 유저가 없거나 데이터를 불러올 수 없습니다./n가입한 유저가 있음에도 불구하고 해당 오류가 지속된다면 한입 스튜디오에 문의해주세요.', ephemeral: true });
             }
 
             // 3. 유저별 총 자산 계산 (현금 + DB 실시간 주가 적용 평가액)
@@ -56,7 +56,7 @@ module.exports = {
 
             // 6. 수정하신 톤앤매너 임베드 송출
             const embed = new EmbedBuilder()
-                .setTitle('🏆 실론 모의주식 자산 랭킹 (Top 10)')
+                .setTitle('🏆 실론 자산 랭킹 (Top 10)')
                 .setDescription(`서버 최고의 투자 고수들을 공개합니다!\n*(총 자산 = 현금 + 보유 주식의 현재 가치)*\n\n${rankingList}`)
                 .setColor('#FFD700') 
                 .setTimestamp()

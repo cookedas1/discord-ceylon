@@ -4,7 +4,7 @@ const db = require('../utils/db');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('주가')
-        .setDescription('실론 모의주식 시장의 종목 시세를 확인합니다.'),
+        .setDescription('시장의 종목 시세를 확인합니다.'),
     
     async execute(interaction) {
         // PostgreSQL 데이터베이스에서 전체 종목 가져오기 (await 추가)

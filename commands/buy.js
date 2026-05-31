@@ -144,7 +144,7 @@ module.exports = {
                         await modalSubmit.reply({ embeds: [buyEmbed] });
 
                         // 사용이 끝난 드롭다운 안내 메시지 지우기
-                        await interaction.editReply({ content: '✅ 주식 매수 프로세스가 완료되었습니다.', embeds: [], components: [] });
+                        await interaction.editReply({ content: '✅ 주식 매수가 완료되었습니다.', embeds: [], components: [] });
                         collector.stop();
 
                     } catch (modalError) {

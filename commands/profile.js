@@ -5,14 +5,14 @@ const { handleError } = require('../utils/errorHandler');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('프로필')
-        .setDescription('자신의 프로필 정보와 보유 코인을 확인합니다.'),
+        .setDescription('자신의 프로필 정보와 보유 캐시를 확인합니다.'),
     
     async execute(interaction) {
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
 
         try {
-            // 1. DB에서 유저 정보(보유 코인, 가입일) 가져오기
+            // 1. DB에서 유저 정보(보유 캐시, 가입일) 가져오기
             const user = await db.checkUser(userId, guildId);
 
             if (!user) {
@@ -36,7 +36,7 @@ module.exports = {
                 .setThumbnail(interaction.user.displayAvatarURL({ forceStatic: false, size: 512 }))
                 .setColor(0x5865F2)
                 .addFields(
-                    { name: '🪙 보유 코인', value: `\`₩${parseInt(user.cash).toLocaleString()}\``, inline: false },
+                    { name: '🪙 보유 캐시', value: `\`₩${parseInt(user.cash).toLocaleString()}\``, inline: false },
                     { name: '📅 가입 날짜', value: `\`${formattedDate}\``, inline: false }
                 )
                 .setTimestamp();
