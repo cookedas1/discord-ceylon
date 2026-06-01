@@ -15,15 +15,23 @@ const TICK_INTERVAL = 30000; // 💡 30초 주기
 // 30초마다 주가를 변동시키는 함수
 async function updateStockPrices() {
     try {
-        const res = await pool.query('SELECT ticker, price FROM stocks');
+        // 💡 history 컬럼도 함께 조회합니다.
+        const res = await pool.query('SELECT ticker, price, history FROM stocks');
         for (const row of res.rows) {
             const changePercent = (Math.random() * 3 - 1.5) / 100; 
             let newPrice = Math.round(row.price * (1 + changePercent));
             if (newPrice < 100) newPrice = 100; // 동전주 방지
 
-            await pool.query('UPDATE stocks SET price = $1 WHERE ticker = $2', [newPrice, row.ticker]);
+            // 💡 히스토리 관리 로직 (최근 10개의 주가만 쌓기)
+            let historyArr = row.history ? row.history.split(',').map(Number) : [];
+            historyArr.push(newPrice);
+            if (historyArr.length > 10) historyArr.shift(); // 10개 넘어가면 오래된 데이터 삭제
+            const newHistoryStr = historyArr.join(',');
+
+            // 💡 price와 history를 동시에 업데이트
+            await pool.query('UPDATE stocks SET price = $1, history = $2 WHERE ticker = $3', [newPrice, newHistoryStr, row.ticker]);
         }
-        console.log(`[📈 DB 시장 변동] 주가가 데이터베이스에 갱신되었습니다. (${TICK_INTERVAL / 1000}초 주기)`);
+        console.log(`[📈 DB 시장 변동] 주가 및 차트 히스토리가 갱신되었습니다. (${TICK_INTERVAL / 1000}초 주기)`);
     } catch (error) {
         handleError(error, 'DB 주가 변동 업데이트 중 오류 발생');
     }
