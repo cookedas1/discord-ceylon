@@ -31,6 +31,7 @@ async function updateStockPrices() {
             // 💡 price와 history를 동시에 업데이트
             await pool.query('UPDATE stocks SET price = $1, history = $2 WHERE ticker = $3', [newPrice, newHistoryStr, row.ticker]);
         }
+        await pool.query('UPDATE users SET loan = ROUND(loan * 1.001) WHERE loan > 0');
         console.log(`[📈 DB 시장 변동] 주가 및 차트 히스토리가 갱신되었습니다. (${TICK_INTERVAL / 1000}초 주기)`);
     } catch (error) {
         handleError(error, 'DB 주가 변동 업데이트 중 오류 발생');
