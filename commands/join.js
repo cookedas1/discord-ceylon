@@ -77,6 +77,13 @@ module.exports = {
                             .setColor(0x00FF00);
 
                         await i.update({ embeds: [successEmbed], components: [] });
+                        const logger = require('../utils/logger');
+                        logger.sendAdminLog(
+                            interaction.client, 
+                            '실론 가입 완료', 
+                            `• **가입자:** <@${userId}> (\`${userId}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **가입 금액:** +${amount.toLocaleString()}원`,
+                            '#FFCC00' // 임베드 색상 노란색으로 지정
+                        );
                     } else {
                         throw new Error('registerUser 처리 중 반환값 실패 오류');
                     }

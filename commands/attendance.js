@@ -69,5 +69,12 @@ module.exports = {
             .setFooter({ text: '내일도 출석하고 더 큰 보너스를 받으세요!' });
 
         await interaction.reply({ embeds: [embed] });
+        const logger = require('../utils/logger');
+        logger.sendAdminLog(
+            interaction.client, 
+            '🏦 신용 대출 실행 완료', 
+            `• **대출자:** <@${userId}> (\`${userId}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **대출 금액:** +${amount.toLocaleString()}원`,
+            '#FFCC00' // 임베드 색상 노란색으로 지정
+        );
     }
 };

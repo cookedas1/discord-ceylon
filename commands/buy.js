@@ -142,6 +142,13 @@ module.exports = {
                             .setTimestamp();
 
                         await modalSubmit.reply({ embeds: [buyEmbed] });
+                        const logger = require('../utils/logger');
+                        logger.sendAdminLog(
+                            interaction.client, 
+                            '주식 매수 체결 완료', 
+                            `• **매수자:** <@${userId}> (\`${userId}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **매수 금액:** +${totalCost.toLocaleString()}원`,
+                            '#FFCC00' // 임베드 색상 노란색으로 지정
+                        );
 
                         // 사용이 끝난 드롭다운 안내 메시지 지우기
                         await interaction.editReply({ content: '✅ 주식 매수가 완료되었습니다.', embeds: [], components: [] });

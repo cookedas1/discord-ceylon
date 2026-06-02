@@ -134,6 +134,13 @@ module.exports = {
                 .setTimestamp();
 
             await interaction.reply({ embeds: [embed] });
+            const logger = require('../utils/logger');
+logger.sendAdminLog(
+                interaction.client, 
+                '뉴스 발행 완료', 
+                `• **뉴스 제목:** ${finalTitle}\n• **실행 서버:** ${interaction.guild.name}\n• **대상 종목:** ${companyName} (${stockTicker})`,
+                '#FFCC00' // 임베드 색상 노란색으로 지정
+            );
 
         } catch (error) {
             // 시스템 런타임 에러 처리

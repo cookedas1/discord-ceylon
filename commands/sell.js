@@ -162,6 +162,13 @@ module.exports = {
                             .setTimestamp();
 
                         await modalSubmit.reply({ embeds: [sellEmbed] });
+                        const logger = require('../utils/logger');
+                        logger.sendAdminLog(
+                            interaction.client,
+                            '📈 주식 매도 완료',
+                            `• **매도자:** <@${userId}> (\`${userId}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **매도 금액:** +${totalEarnings.toLocaleString()}원`,
+                            '#FFCC00' // 임베드 색상 노란색으로 지정
+                        );
 
                         // 가이드 메시지 상자 청소
                         await interaction.editReply({ content: '✅ 주식 매도 프로세스가 완료되었습니다.', embeds: [], components: [] });

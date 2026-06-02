@@ -32,5 +32,12 @@ module.exports = {
         const row = new ActionRowBuilder().addComponents(menu);
 
         await interaction.reply({ embeds: [embed], components: [row] });
+        const logger = require('../utils/logger');
+        logger.sendAdminLog(
+            interaction.client, 
+            '미니게임 실행 완료', 
+            `• **플레이어:** <@${interaction.user.id}> (\`${interaction.user.id}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **게임:** ${interaction.options.get('game')?.value}`,
+            '#FFCC00' // 임베드 색상 노란색으로 지정
+        );
     },
 };
