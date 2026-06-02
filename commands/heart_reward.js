@@ -81,13 +81,6 @@ module.exports = {
                 .setTimestamp();
 
             await interaction.editReply({ embeds: [embed] });
-            const logger = require('../utils/logger');
-            logger.sendAdminLog(
-                interaction.client, 
-                '한디리 추천 보상 수령 완료', 
-                `• **보상 수령자:** <@${userId}> (\`${userId}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **보상 금액:** +${rewardAmount.toLocaleString()}원`,
-                '#FFCC00' // 임베드 색상 노란색으로 지정
-            );
 
             // 💡 아래에서 만들 어드민 로그 시스템과 연동!
             const logger = require('../utils/logger');
