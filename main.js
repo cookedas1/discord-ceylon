@@ -89,9 +89,3 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
-http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Ceylon Bot is Online!');
-}).listen(PORT, () => {
-    console.log(`[시스템] 서버 유지를 위한 웹서버가 ${PORT} 포트에서 돌아가는 중입니다.`);
-});
