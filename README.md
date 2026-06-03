@@ -1,11 +1,11 @@
 # 디스코드에서 모의 주식을! 실론
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Discord-Verified_Bot-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord Verified">
-  <img src="https://img.shields.io/badge/License-AGPL_3.0-orange?style=flat-square" alt="License">
-  <img src="https://img.shields.io/badge/Node.js-v22-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js">
-  <img src="https://img.shields.io/badge/PostgreSQL-v18-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <a href="https://koreanbots.dev/bots/1324325726178246657"><img src="https://img.shields.io/badge/Koreanbots-하트_보상_연동-FF4B4B?style=flat-square" alt="Koreanbots"></a>
+  <img src="https://img.shields.io/static/v1?label=Discord&message=Verified%20Bot&color=5865F2&style=flat-square&logo=discord&logoColor=white" alt="Discord Verified">
+  <img src="https://img.shields.io/static/v1?label=License&message=AGPL%203.0&color=orange&style=flat-square" alt="License">
+  <img src="https://img.shields.io/static/v1?label=Node.js&message=v22&color=339933&style=flat-square&logo=node.js&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/static/v1?label=PostgreSQL&message=v18&color=4169E1&style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <a href="https://koreanbots.dev/bots/1324325726178246657"><img src="https://img.shields.io/static/v1?label=Koreanbots&message=%ED%95%98%ED%8A%B8%20%EB%B3%B4%EC%83%81%20%EC%97%B0%EB%8F%99&color=FF4B4B&style=flat-square" alt="Koreanbots"></a>
 </p>
 
 - Made by HanibStudio
