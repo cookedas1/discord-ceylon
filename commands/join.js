@@ -50,7 +50,7 @@ module.exports = {
                 .setTitle('📜 실론 가입 안내')
                 .setDescription(
                     `**[약관 안내]**\n` +
-                    `실론 이용에 대한 가입을 하게 된다면 **[운영 정책](https://fair-fiction-878.notion.site/5b4ca436249c489db50ac56c6ea367e5?source=copy_link) 및 [개인정보처리방침](https://fair-fiction-878.notion.site/37112d924c26800bb7d7cfcbf9604719?source=copy_link)**에 동의하는 것으로 간주합니다.`
+                    `실론 이용에 대한 가입을 하게 된다면 **[운영 정책](https://fair-fiction-878.notion.site/5b4ca436249c489db50ac56c6ea367e5?source=copy_link) 및 [개인정보처리방침](https://fair-fiction-878.notion.site/37112d924c26800bb7d7cfcbf9604719?source=copy_link), [이용약관](https://fair-fiction-878.notion.site/37412d924c2680d1966ce3e530b251bc?source=copy_link)**에 동의하는 것으로 간주합니다.`
                 )
                 .setColor(0x0099FF)
                 .setTimestamp();
