@@ -15,50 +15,43 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const db = require('../utils/db');
-const { handleError } = require('../utils/errorHandler');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('핑')
-        .setDescription('봇, 디스코드 API, 데이터베이스의 지연 시간을 측정합니다.'),
-    
+        .setDescription('⚡ 실론 봇의 상태와 개발 정보를 확인합니다.'),
+
     async execute(interaction) {
-        try {
-            // 1. 디스코드 API 웹소켓 핑 측정
-            const apiPing = interaction.client.ws.ping;
+        // 1. 디스코드 API와 웹소켓 지연 시간 계산
+        const apiPing = Date.now() - interaction.createdTimestamp;
+        const wsPing = interaction.client.ws.ping;
 
-            // 2. 봇 응답 속도 (명령어 입력 인터랙션 생성 타임스탬프 기준 계산)
-            const botPing = Date.now() - interaction.createdTimestamp;
+        // 2. 리드미 감성을 살린 깔끔한 임베드 조립
+        const embed = new EmbedBuilder()
+            .setTitle('🏓 퐁! 실론(Ceylon) 시스템 상태')
+            .setDescription('> 실론 시스템 상태')
+            .setColor('#5865F2') // 디스코드 공식 시그니처 색상
+            .addFields(
+                { 
+                    name: '📡 지연 시간 (Ping)', 
+                    value: `🟢 **Websocket:** \`${wsPing}ms\`\n🔵 **API Latency:** \`${apiPing}ms\``, 
+                    inline: false 
+                },
+                { 
+                    name: '📦 개발 환경 (Environment)', 
+                    value: '• **Runtime:** `Node.js v22`\n• **Database:** `PostgreSQL v18`\n• **VCS:** `Git`', 
+                    inline: true 
+                },
+                { 
+                    name: '👥 크레딧 (Credits)', 
+                    value: '• **Studio:** HanibStudio\n• **Director:** [cookedas1](https://github.com/cookedas1)', 
+                    inline: false 
+                }
+            )
+            .setFooter({ text: '본 디스코드 봇은 cookedas1의 discord-ceylon을 기반으로 두고 있습니다.' })
+            .setTimestamp();
 
-            // 3. PostgreSQL 서버 응답 속도 실측
-            const pgStart = Date.now();
-            let pgStatus = '🟢 정상 작동 중';
-            let pgPing = 0;
-            
-            try {
-                await db.query('SELECT 1'); // 가벼운 데이터 쿼리로 지연속도 측정
-                pgPing = Date.now() - pgStart;
-            } catch (dbError) {
-                pgStatus = '🔴 연결 끊김 (오류 발생)';
-            }
-
-            // 종합 상태 임베드 빌드
-            const pingEmbed = new EmbedBuilder()
-                .setTitle('🏓 실론 시스템 핑 및 서버 상태')
-                .setColor(pgStatus.startsWith('🟢') ? 0x5865F2 : 0xFF0000)
-                .addFields(
-                    { name: '🤖 봇 응답 속도 (Latency)', value: `\`${botPing}ms\``, inline: true },
-                    { name: '🌐 Discord API 상태', value: `\`${apiPing}ms\``, inline: true },
-                    { name: '🐘 PostgreSQL DB 상태', value: `${pgStatus} (지연 시간: \`${pgPing}ms\`)`, inline: false }
-                )
-                .setFooter({ text: 'by 한입 스튜디오' })
-                .setTimestamp();
-
-            await interaction.reply({ embeds: [pingEmbed] });
-
-        } catch (error) {
-            handleError(error, '핑 명령어 실행 중 에러 발생', interaction);
-        }
-    },
+        // 3. 임베드 전송
+        await interaction.reply({ embeds: [embed] });
+    }
 };

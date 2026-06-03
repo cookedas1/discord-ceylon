@@ -17,6 +17,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const db = require('../utils/db');
 
+const SHOP_ITEMS = {
+    'item_ticket_fee': { name: '거래 수수료 1회 면제권', price: 500000, emoji: '🎫' },
+    'item_info_insider': { name: '은밀한 찌라시 (내부자 정보)', price: 1500000, emoji: '🕵️' }
+};
+
 module.exports = {
     async handleInteraction(interaction) {
         
@@ -190,6 +195,51 @@ module.exports = {
             await db.query('UPDATE users SET cash = cash + $1 WHERE user_id = $2 AND guild_id = $3', [reward, interaction.user.id, interaction.guild.id]);
 
             await interaction.update({ embeds: [stopEmbed], components: [] });
+        }
+        if (interaction.isStringSelectMenu()) {
+            if (interaction.customId === 'shop_buy_menu') {
+                const itemId = interaction.values[0];
+                const itemInfo = SHOP_ITEMS[itemId];
+                const userId = interaction.user.id;
+                const guildId = interaction.guild.id;
+
+                try {
+                    await interaction.deferReply({ ephemeral: true });
+
+                    // 1. 유저 정보 및 잔고 확인
+                    const user = await db.checkUser(userId, guildId);
+                    if (!user) return interaction.editReply('❌ 주식 계좌가 없습니다.');
+                    if (user.cash < itemInfo.price) {
+                        return interaction.editReply(`❌ 잔액이 부족합니다. (필요 금액: \`${itemInfo.price.toLocaleString()} 원\`)`);
+                    }
+
+                    // 2. 돈 차감 및 인벤토리 아이템 추가 (트랜잭션처럼 처리하면 좋지만, 간단하게 순차 쿼리로 진행)
+                    const newCash = parseInt(user.cash) - itemInfo.price;
+            
+                    // 현금 차감
+                    await db.query('UPDATE users SET cash = $1 WHERE user_id = $2 AND guild_id = $3', [newCash, userId, guildId]);
+            
+                    // 인벤토리에 아이템 추가 (이미 있으면 수량 +1, 없으면 새로 생성)
+                    await db.query(`
+                        INSERT INTO user_inventory (user_id, guild_id, item_id, quantity)
+                        VALUES ($1, $2, $3, 1)
+                        ON CONFLICT (user_id, guild_id, item_id)
+                        DO UPDATE SET quantity = user_inventory.quantity + 1
+                    `, [userId, guildId, itemId]);
+
+                    // 3. 성공 알림
+                    const successEmbed = new EmbedBuilder()
+                        .setTitle('🎉 구매 완료!')
+                        .setDescription(`${itemInfo.emoji} **${itemInfo.name}** 아이템을 성공적으로 구매했습니다.\n\n남은 잔고: \`${newCash.toLocaleString()} 원\``)
+                        .setColor('#00FF00');
+
+                    await interaction.editReply({ embeds: [successEmbed] });
+
+                } catch (error) {
+                    console.error('구매 처리 중 오류:', error);
+                    await interaction.editReply('❌ 아이템 구매 중 오류가 발생했습니다.');
+                }
+            }
         }
     }
 };
