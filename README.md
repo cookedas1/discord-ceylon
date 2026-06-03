@@ -1,4 +1,13 @@
 # 디스코드에서 모의 주식을! 실론
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Discord-Verified_Bot-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord Verified">
+  <img src="https://img.shields.io/badge/License-AGPL_3.0-orange?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/Node.js-v22-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js">
+  <img src="https://img.shields.io/badge/PostgreSQL-v18-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <a href="https://koreanbots.dev/bots/1324325726178246657"><img src="https://img.shields.io/badge/Koreanbots-하트_보상_연동-FF4B4B?style=flat-square" alt="Koreanbots"></a>
+</p>
+
 - Made by HanibStudio
  - Director: cookedas1
 
