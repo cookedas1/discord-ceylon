@@ -105,3 +105,51 @@ client.on('interactionCreate', async interaction => {
 });
 
 client.login(process.env.DISCORD_TOKEN);
+// ================= 한디리 서버 수 자동 업데이트 함수 =================
+const sendKoreanbotsStats = async (client) => {
+    const botId = client.user.id;
+    const serverCount = client.guilds.cache.size;
+    const token = process.env.KOREANBOTS_TOKEN;
+
+    // 토큰이 없는 경우 에러를 방지하기 위한 예외 처리
+    if (!token || token.includes("여기에_발급받은")) {
+        console.error("[한디리] KOREANBOTS_TOKEN이 .env 파일에 올바르게 설정되지 않았습니다.");
+        return;
+    }
+
+    try {
+        // Node.js 22 내장 fetch API 사용
+        const response = await fetch(`https://koreanbots.dev/api/v2/bots/${botId}/stats`, {
+            method: 'POST',
+            headers: {
+                'Authorization': token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                servers: serverCount
+            })
+        });
+
+        if (response.ok) {
+            console.log(`[한디리] 서버 수 업데이트 성공! 현재 서버 수: ${serverCount}개`);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error(`[한디리] 업데이트 실패 (상태 코드: ${response.status})`, errorData);
+        }
+    } catch (error) {
+        console.error("[한디리] API 요청 중 네트워크 에러 발생:", error);
+    }
+};
+
+// ================= 봇 준비 완료 (Ready) 이벤트 =================
+client.once('ready', () => {
+    console.log(`[로그인] ${client.user.tag} 봇이 성공적으로 가동되었습니다!`);
+    
+    // 1. 봇이 켜지자마자 즉시 한디리에 서버 수 전송
+    sendKoreanbotsStats(client);
+    
+    // 2. 이후 3시간마다 자동으로 실행 (3 * 60 * 60 * 1000 밀리초)
+    setInterval(() => {
+        sendKoreanbotsStats(client);
+    }, 3 * 60 * 60 * 1000);
+});
