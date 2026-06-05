@@ -19,8 +19,8 @@ const db = require('../utils/db');
 const { handleError } = require('../utils/errorHandler');
 
 // ⚙️ 한디리(Koreanbots) 세팅
-const BOT_ID = '개발자님의_봇_ID_입력'; 
-const KOREANBOTS_TOKEN = '한디리_개발자_콘솔에서_발급받은_토큰_입력';
+const BOT_ID = process.env.CLIENT_ID; 
+const KOREANBOTS_TOKEN = process.env.KOREANBOTS_TOKEN;
 
 module.exports = {
     data: new SlashCommandBuilder()
