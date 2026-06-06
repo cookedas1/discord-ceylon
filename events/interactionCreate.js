@@ -24,19 +24,120 @@ const SHOP_ITEMS = {
 
 module.exports = {
     async handleInteraction(interaction) {
-        
+
         // 1. 드롭다운 메뉴를 선택했을 때
         if (interaction.isStringSelectMenu() && interaction.customId === 'minigame_select') {
             const selected = interaction.values[0];
+            const selectedGame = interaction.values[0];
+            const userId = interaction.user.id;
+            const guildId = interaction.guild.id;
+
+            if (selectedGame === 'slot_machine') {
+                try {
+                    // 1. 유저 데이터 및 잔고 확인
+                    const user = await db.checkUser(userId, guildId);
+                    if (!user) {
+                        return await interaction.reply({ content: '❌ 가입 정보가 없습니다. 먼저 `/가입` 명령어를 이용해주세요.', ephemeral: true });
+                    }
+
+                    const cost = 50000; // 판당 소모 금액
+                    let currentCash = parseInt(user.cash);
+
+                    if (currentCash < cost) {
+                        return await interaction.reply({ content: `❌ 잔고가 부족합니다! 슬롯머신을 돌리려면 최소 **${cost.toLocaleString()}원**이 필요합니다.`, ephemeral: true });
+                    }
+
+                    // 2. 긴장감을 위한 슬롯 돌리기 연출 (최초 응답)
+                    const spinningEmbed = new EmbedBuilder()
+                        .setTitle('🎰 실론 인생역전 슬롯머신')
+                        .setDescription(`💰 **판돈:** 50,000원 차감 완료!\n\n 슬롯이 맹렬하게 돌아갑니다...\n\n[ 🔄 | 🔄 | 🔄 ]`)
+                        .setColor('#FFA500')
+                        .setFooter({ text: '대박 777은 10배 보상!' });
+
+                    await interaction.reply({ embeds: [spinningEmbed] });
+
+                    // 3. 딜레이 연출 (1.5초 뒤 결과 발표)
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    // 슬롯 심볼 배열 정의
+                    const symbols = ['🍒', '🍊', '🍏', '💎', '7️⃣'];
+
+                    // 3개의 슬롯 무작위 추첨
+                    const slot1 = symbols[Math.floor(Math.random() * symbols.length)];
+                    const slot2 = symbols[Math.floor(Math.random() * symbols.length)];
+                    const slot3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+                    // 4. 배율 및 당첨 정산 규칙
+                    let multiplier = 0;
+                    let resultTitle = '📉 다음 기회에... (꽝)';
+                    let embedColor = '#FF3333';
+
+                    if (slot1 === slot2 && slot2 === slot3) {
+                        // 대박! 3개 일치 (트리플)
+                        if (slot1 === '7️⃣') {
+                            multiplier = 10; // 777은 10배
+                            resultTitle = '🎉 잭팟 대폭발!! 초대형 777 달성! 🎉';
+                            embedColor = '#FFD700';
+                        } else if (slot1 === '💎') {
+                            multiplier = 6;  // 다이아는 6배
+                            resultTitle = '💎 영롱한 다이아몬드 트리플 달성! 💎';
+                            embedColor = '#00FFFF';
+                        } else {
+                            multiplier = 4;  // 일반 과일 3개는 4배
+                            resultTitle = '✨ 트리플 달성! 축하합니다! ✨';
+                            embedColor = '#00FF00';
+                        }
+                    } else if (slot1 === slot2 || slot2 === slot3 || slot1 === slot3) {
+                        // 원 페어 (2개 일치) -> 본전치기 이상 구제책
+                        multiplier = 1.4;
+                        resultTitle = '🍎 아슬아슬하게 페어(2개) 달성!';
+                        embedColor = '#33FF99';
+                    }
+
+                    // 보상 계산 및 DB 반영
+                    const prize = Math.floor(cost * multiplier);
+                    const newCash = currentCash - cost + prize;
+
+                    await db.query('UPDATE users SET cash = $1 WHERE user_id = $2 AND guild_id = $3', [newCash, userId, guildId]);
+
+                    // 5. 결과 화면 임베드 조립
+                    const resultEmbed = new EmbedBuilder()
+                        .setTitle(`🎰 슬롯머신 결과: ${resultTitle}`)
+                        .setDescription(
+                            `### [  ${slot1}  |  ${slot2}  |  ${slot3}  ]\n\n` +
+                            `💵 **지출 현금:** -${cost.toLocaleString()} 원\n` +
+                            `🎁 **획득 보상:** +${prize.toLocaleString()} 원 (배율: ${multiplier}배)\n\n` +
+                            `💰 **현재 잔고:** \`${newCash.toLocaleString()} 원\``
+                        )
+                        .setColor(embedColor)
+                        .setTimestamp();
+
+                    await interaction.editReply({ embeds: [resultEmbed] });
+
+                    // 6. 실론 봇만의 본부 어드민 실시간 로그 연송
+                    const logger = require('../utils/logger');
+                    logger.sendAdminLog(
+                        interaction.client,
+                        '🎰 미니게임: 슬롯머신 결과',
+                        `• **플레이어:** <@${userId}> (\`${userId}\`)\n• **실행 서버:** ${interaction.guild.name}\n• **결과 슬롯:** [ ${slot1} | ${slot2} | ${slot3} ] (${multiplier}배)\n• **최종 정산:** ${prize > 0 ? `+${prize.toLocaleString()}원` : `-${cost.toLocaleString()}원`}`,
+                        multiplier >= 4 ? '#00FF00' : '#FF3333'
+                    );
+
+                } catch (error) {
+                    // 만능 에러 핸들러 호출
+                    const { handleError } = require('../utils/errorHandler');
+                    handleError(error, '슬롯머신 미니게임 처리 중 오류 발생', interaction);
+                }
+            }
 
             // 🎲 [게임 1] 주사위 대결 선택 시 -> 배팅금 입력 모달창 띄우기
             if (selected === 'dice_game') {
                 // 오늘 이미 플레이했는지 검증 (main.js에서 가입 여부를 필터링하므로 무조건 row가 존재함)
                 const userRes = await db.query('SELECT last_dice_game FROM users WHERE user_id = $1 AND guild_id = $2', [interaction.user.id, interaction.guild.id]);
                 const today = new Date().toISOString().split('T')[0];
-                
-                const lastGame = userRes.rows[0]?.last_dice_game 
-                    ? new Date(userRes.rows[0].last_dice_game).toISOString().split('T')[0] 
+
+                const lastGame = userRes.rows[0]?.last_dice_game
+                    ? new Date(userRes.rows[0].last_dice_game).toISOString().split('T')[0]
                     : null;
 
                 if (lastGame === today) {
@@ -130,18 +231,18 @@ module.exports = {
                 .setTitle(resultTitle)
                 .setColor(finalColor)
                 .addFields(
-                    { name: `🙋‍♂️ ${interaction.user.username}의 주사위`, value: `${diceEmojis[user1-1]} + ${diceEmojis[user2-1]} = **${userSum}**`, inline: true },
-                    { name: `🤖 실론의 주사위`, value: `${diceEmojis[bot1-1]} + ${diceEmojis[bot2-1]} = **${botSum}**`, inline: true },
+                    { name: `🙋‍♂️ ${interaction.user.username}의 주사위`, value: `${diceEmojis[user1 - 1]} + ${diceEmojis[user2 - 1]} = **${userSum}**`, inline: true },
+                    { name: `🤖 실론의 주사위`, value: `${diceEmojis[bot1 - 1]} + ${diceEmojis[bot2 - 1]} = **${botSum}**`, inline: true },
                     { name: '결과', value: resultDesc }
                 );
 
             await interaction.reply({ embeds: [resultEmbed] });
         }
-        
+
         // 🔫 러시안 물총 버튼 로직
         if (interaction.isButton() && interaction.customId.startsWith('gun_shoot_')) {
             const stage = parseInt(interaction.customId.split('_')[2]); // 현재 몇 번째 격발인지
-            
+
             // 첫 방아쇠 당길 때만 참가비 1,000 캐시 선차감 및 잔고 확인
             if (stage === 1) {
                 const balanceRes = await db.query('SELECT cash FROM users WHERE user_id = $1 AND guild_id = $2', [interaction.user.id, interaction.guild.id]);
@@ -153,14 +254,14 @@ module.exports = {
             }
 
             // 1/6 확률로 물총 발사 (약실 1개)
-            const isWater = Math.floor(Math.random() * 6) === 0; 
+            const isWater = Math.floor(Math.random() * 6) === 0;
 
             if (isWater) {
                 const failEmbed = new EmbedBuilder()
                     .setTitle('💦 푸쉬이익!!!')
                     .setDescription(`정통으로 물을 맞았습니다! 탈락! 💦\n이미 지불한 참가비 1,000 캐시는 공중분해 되었습니다.`)
                     .setColor('#FF0000');
-                
+
                 // 이미 선차감했으므로 추가 DB 차감은 없음
                 await interaction.update({ embeds: [failEmbed], components: [] });
             } else {
@@ -190,7 +291,7 @@ module.exports = {
                 .setTitle('💰 영리한 퇴장!')
                 .setDescription(`현명하군요! 물총을 맞기 전에 **${reward.toLocaleString()} 캐시**를 챙겨 안전하게 퇴장했습니다.`)
                 .setColor('#FFFF00');
-            
+
             // 처음에 1000 캐시를 뺐으므로, 배율이 적용된 최종 금액을 그대로 지급하면 됨
             await db.query('UPDATE users SET cash = cash + $1 WHERE user_id = $2 AND guild_id = $3', [reward, interaction.user.id, interaction.guild.id]);
 
@@ -215,10 +316,10 @@ module.exports = {
 
                     // 2. 돈 차감 및 인벤토리 아이템 추가 (트랜잭션처럼 처리하면 좋지만, 간단하게 순차 쿼리로 진행)
                     const newCash = parseInt(user.cash) - itemInfo.price;
-            
+
                     // 현금 차감
                     await db.query('UPDATE users SET cash = $1 WHERE user_id = $2 AND guild_id = $3', [newCash, userId, guildId]);
-            
+
                     // 인벤토리에 아이템 추가 (이미 있으면 수량 +1, 없으면 새로 생성)
                     await db.query(`
                         INSERT INTO user_inventory (user_id, guild_id, item_id, quantity)

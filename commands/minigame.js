@@ -43,6 +43,11 @@ module.exports = {
                     description: '6개의 약실 중 진짜 물총은 하나! 살아남을 때마다 배율 상승!',
                     value: 'water_gun',
                 },
+                {
+                    label: '🎰 인생역전 슬롯머신',
+                    description: '세 줄의 이모지를 맞춰 대박을 노리세요! (1회 5만 소모)',
+                    value: 'slot_machine',
+                }
             ]);
 
         const row = new ActionRowBuilder().addComponents(menu);
