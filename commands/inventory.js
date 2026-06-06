@@ -4,7 +4,6 @@ const { handleError } = require('../utils/errorHandler');
 
 // 아이템 정보 정의
 const ITEM_META = {
-    'item_ticket_fee': { name: '거래 수수료 1회 면제권', emoji: '🎫', desc: '다음 주식 매도 시 수수료를 100% 면제합니다.' },
     'item_info_insider': { name: '은밀한 찌라시 (내부자 정보)', emoji: '🕵️', desc: '다음에 터질 뉴스를 미리 은밀하게 훔쳐봅니다.' }
 };
 
@@ -115,13 +114,7 @@ module.exports = {
                     // 💥 아이템별 진짜 효과 연동 부분!
                     const targetMeta = ITEM_META[selectedItemId];
                     let effectMessage = '';
-
-                    if (selectedItemId === 'item_ticket_fee') {
-                        effectMessage = `🎫 **수수료 면제권**이 사용되었습니다!\n다음 주식 매도 시 수수료가 자동으로 전액 면제됩니다.`;
-                        // 팁: 나중에 매도 로직(sell.js)에서 이 버프가 켜져있는지 체크하는 컬럼을 users 테이블에 넣거나, 
-                        // 매도 시점에 인벤토리를 직접 까는 자동 방식으로 놔둬도 됨. (유저가 원할 때 쓰게 하려면 버프 플래그 활성화 추천)
-                    } 
-                    else if (selectedItemId === 'item_info_insider') {
+                    if (selectedItemId === 'item_info_insider') {
                         // 💡 다음날 뉴스 테이블이나 스케줄러 큐에서 다음 종목 호재 정보를 긁어오는 쿼리 영역
                         effectMessage = `🕵️ **은밀한 찌라시 개봉 결과**\n\n**[익명의 주식 브로커]:** "어이, 내일 주식 변동 타임에 어떤 기업이 대형 사고 하나 제대로 칠 것 같더라고... 내 전재산 다 걸었으니 형씨도 준비해둬."`;
                     }
