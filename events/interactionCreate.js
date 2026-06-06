@@ -18,7 +18,6 @@ const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedB
 const db = require('../utils/db');
 
 const SHOP_ITEMS = {
-    'item_ticket_fee': { name: '거래 수수료 1회 면제권', price: 500000, emoji: '🎫' },
     'item_info_insider': { name: '은밀한 찌라시 (내부자 정보)', price: 1500000, emoji: '🕵️' }
 };
 

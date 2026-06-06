@@ -9,13 +9,6 @@ const SUPPORT_SERVER_INVITE = 'https://discord.gg/Ftnsy8ByGV';
 // 📦 상점 아이템 목록 (나중을 위해 모듈화하기 좋게 배열로 관리)
 const SHOP_ITEMS = [
     {
-        id: 'item_ticket_fee',
-        label: '거래 수수료 1회 면제권',
-        description: '다음 주식 매도 시 수수료를 100% 면제받습니다.',
-        price: 500000,
-        emoji: '🎫'
-    },
-    {
         id: 'item_info_insider',
         label: '은밀한 찌라시 (내부자 정보)',
         description: '다음 주가 변동장에 호재가 뜰지 악재가 뜰지 슬쩍 알려줍니다.',
@@ -48,7 +41,7 @@ module.exports = {
             const user = await db.checkUser(userId, guildId);
 
             if (!user) {
-                return await interaction.reply({ content: '❌ 먼저 주식 계좌를 개설해 주세요.', ephemeral: true });
+                return await interaction.reply({ content: '❌ 먼저 `/가입`으로 실론 서비스 가입을 해주셔야 명령어 사용이 가능 합니다.', ephemeral: true });
             }
 
             // 3. 상점 임베드 조립
